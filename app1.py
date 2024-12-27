@@ -86,9 +86,7 @@ def process_text(text):
 
 def remove_stopwords(word_counts):
     try:
-        # 使用原始字符串来表示路径，并确保使用正确的路径
-        stopwords_path = r"C:\Users\32595\Desktop\python\stopwords.txt"
-        with open(stopwords_path, 'r', encoding='utf-8') as f:
+        with open('stopwords.txt', 'r', encoding='utf-8') as f:
             stopwords = [line.strip() for line in f.readlines()]
         return Counter({word: count for word, count in word_counts.items() if word not in stopwords})
     except FileNotFoundError:
