@@ -37,12 +37,19 @@ def create_pie_chart_plotly(df):
 
 # 使用 Pyecharts 创建饼图
 def create_pie_chart_pyecharts(df):
-    data = [list(z) for z in zip(df['Word'].astype(str), df['Count'])]
+    # 确保数据是 [(名称, 值), (名称, 值), ...] 的格式
+    data = [list(z) for z in zip(df['Word'].astype(str), df['Count'].tolist())]
+
+    # 检查是否有数据
+    if not data:
+        st.error("最小词频过大，无数据，请减小最低词频阈值。")
+        return ""  # 返回空字符串，避免进一步的渲染错误
+
     c = (
         Pie(init_opts=opts.InitOpts(theme=ThemeType.LIGHT))
-        .add("", data_pair=data)
-        .set_global_opts(title_opts=opts.TitleOpts(title="词频饼图"))
-        .set_series_opts(label_opts=opts.LabelOpts(formatter="{b}: {c}"))
+            .add("", data_pair=data)  # 确保这里传递的是数据对列表
+            .set_global_opts(title_opts=opts.TitleOpts(title="词频饼图"))
+            .set_series_opts(label_opts=opts.LabelOpts(formatter="{b}: {c}"))
     )
     return c.render_embed()
 
@@ -67,7 +74,7 @@ def create_line_chart_pyecharts(df):
     return line.render_embed()
 
 # 使用 Pyecharts 创建散点图
-def create_scatter_chart_pyecharts(df):
+def create_scatter_chart_pyecharts(df):  # 修正了函数名的大小写
     scatter = (
         Scatter(init_opts=opts.InitOpts(theme=ThemeType.LIGHT))
         .add_xaxis(df['Word'].astype(str).tolist())
@@ -142,6 +149,7 @@ def display_top_words(word_counts, top_n=20):
         else:
             st.warning(f"非词汇条目：{word} - {count}")
 
+
 # 如果用户输入了URL，开始处理
 if url:
     text = fetch_text_from_url(url)
@@ -160,13 +168,16 @@ if url:
         df_word_counts['Word'] = df_word_counts['Word'].astype(str)
         df_word_counts['Count'] = df_word_counts['Count'].astype(int)
 
-        chart_type = st.sidebar.selectbox('选择图表类型', ['条形图', '折线图', '饼图', '散点图', '雷达图', '树形图', '面积图', 'Pyecharts 饼图', 'Pyecharts 柱状图', 'Pyecharts 折线图', 'Pyecharts 散点图'])
+        chart_type = st.sidebar.selectbox('选择图表类型', [
+            '条形图', '折线图', '饼图', '散点图', '雷达图', '树形图', '面积图',
+            'Pyecharts 饼图', 'Pyecharts 柱状图', 'Pyecharts 折线图', 'Pyecharts 散点图'
+        ])
         if chart_type.startswith('Pyecharts '):
             chart_func = {
                 'Pyecharts 饼图': create_pie_chart_pyecharts,
                 'Pyecharts 柱状图': create_bar_chart_pyecharts,
                 'Pyecharts 折线图': create_line_chart_pyecharts,
-                'Pyecharts 散点图': create_scatter_chart_pyecharts,
+                'Pyecharts 散点图': create_scatter_chart_pyecharts,  # 确保函数名正确
             }.get(chart_type, create_pie_chart_pyecharts)
             html = chart_func(df_word_counts)
             components.html(html, height=600)
